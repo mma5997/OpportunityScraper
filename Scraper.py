@@ -69,6 +69,8 @@ def getRowFromJobFields(jobFields):
 
     image_link = IMAGE_PREFIX_URL + jobFields[COMPANY][LOGO]
     jobDesc = json.dumps(jobFields[JOB_DESCRIPTION])
+
+    # extract location from jobDescription
     locations = ",".join(jobFields[LOCATIONS])
     upperCaseJobDesc = jobDesc.upper()
     if len(jobFields[LOCATIONS]) == 0:
@@ -78,6 +80,25 @@ def getRowFromJobFields(jobFields):
 
     if len(locations) > 0 and locations[-1] == ",":
         locations = locations[:-1]
+
+    # get rid of the location in JobDescription and the trailing unwanted text
+    if len(jobDesc) > 0:
+        if '<h4>' in jobDesc:
+            index = jobDesc.index("<h4>")
+            jobDesc = jobDesc[index:]
+        rIndex = jobDesc.rfind("<p>")
+        if rIndex != -1:
+            jobDesc = jobDesc[:rIndex]
+
+    jobLink = jobFields[EXTERNAL_URL]
+
+    # replacing the query param value with techmaestro literal
+    if len(jobLink) > 0 and '?' in jobLink:
+        index = jobLink.index("?")
+        firstPart = jobLink[:index]
+        secondPart = jobLink[index:]
+        secondPart = secondPart.replace("workattech", "techmaestro")
+        jobLink = firstPart + secondPart
 
     date_opportunity = datetime.datetime.utcnow(
     ) + datetime.timedelta(days=OPPORTUNITY_OFFSET)
@@ -91,11 +112,25 @@ def getRowFromJobFields(jobFields):
     date_opportunity_string = date_opportunity.strftime(
         "%d-%m-%YT%H:%M:%S%z%Z")
 
-    experience = "Min Experience : " + str(jobFields[EXPERIENCE][MIN]) + ", Max Experience : " + \
-        str(jobFields[EXPERIENCE][MAX]) + \
-        ", Level : " + jobFields[EXPERIENCE][LEVEL]
+    experience = ""
+
+    if jobFields[EXPERIENCE][MIN] is not None:
+        experience += "Min Experience : " + \
+            str(jobFields[EXPERIENCE][MIN]) + ","
+    if jobFields[EXPERIENCE][MAX] is not None:
+        experience += "Max Experience : " + \
+            str(jobFields[EXPERIENCE][MAX]) + ","
+    if jobFields[EXPERIENCE][LEVEL] is not None and len(jobFields[EXPERIENCE][LEVEL]) > 0:
+        experience += "Level : " + jobFields[EXPERIENCE][LEVEL]
+
+    if len(experience) > 0 and experience[-1] == ",":
+        experience = experience[:-1]
+
+    # updatedOn same as createdOn apparently
+    updatedOn = date_posted_datetime_string
+
     row = list([jobFields[COMPANY][NAME], date_posted_datetime_string, expiry_date_datetime_string, image_link,
-               jobDesc.strip(), jobFields[EXTERNAL_URL], locations, date_opportunity_string, experience, jobFields[TITLE], ""])
+               jobDesc.strip(), jobLink, locations, date_opportunity_string, experience, jobFields[TITLE], updatedOn])
     # print(row)
     # for i in range(len(row)):
     #     row[i] = row[i].decode("utf-8")
@@ -133,13 +168,13 @@ def scrape():
     allJobs = responseWithAllJobs.json()
     count = 0
     for job in allJobs:
-        # if(count == 10):
-        #     break
+        if(count == 10):
+            break
         addJobToCsv(job)
         count += 1
-    return
     print("############################################")
     print("Total jobs serialized --> " + str(count))
+    return
 
 
 if __name__ == "__main__":
