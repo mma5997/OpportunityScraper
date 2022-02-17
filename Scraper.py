@@ -8,6 +8,7 @@ import json
 REQUREST_URL = 'https://workat.tech/api/jobs/'
 IMAGE_PREFIX_URL = "https://d2yjqys1j7uhg1.cloudfront.net"
 CSV_FILE_REL_PATH = "./Files/ScrapedJobs.csv"
+IMAGES_REL_PATH = "./Images/"
 
 
 # Expiry offset of days
@@ -67,7 +68,17 @@ def getRowFromJobFields(jobFields):
         expiry_date_datetime_string = expiry_date_datetime.strftime(
             "%d-%m-%YT%H:%M:%S%z%Z")
 
-    image_link = IMAGE_PREFIX_URL + jobFields[COMPANY][LOGO]
+    imageLink = IMAGE_PREFIX_URL + jobFields[COMPANY][LOGO]
+
+    # script for writing the images to filesystem. Done using it so commented it
+    # index = imageLink.rfind("/")
+    # if len(imageLink) > 0 and index != -1 and (index+1) < len(imageLink):
+    #     fileName = imageLink[index+1:]
+    #     imgResponse = requests.get(imageLink)
+    #     file = open(IMAGES_REL_PATH + fileName, "wb")
+    #     file.write(imgResponse.content)
+    #     file.close()
+
     jobDesc = json.dumps(jobFields[JOB_DESCRIPTION])
 
     # extract location from jobDescription
@@ -129,7 +140,7 @@ def getRowFromJobFields(jobFields):
     # updatedOn same as createdOn apparently
     updatedOn = date_posted_datetime_string
 
-    row = list([jobFields[COMPANY][NAME], date_posted_datetime_string, expiry_date_datetime_string, image_link,
+    row = list([jobFields[COMPANY][NAME], date_posted_datetime_string, expiry_date_datetime_string, imageLink,
                jobDesc.strip(), jobLink, locations, date_opportunity_string, experience, jobFields[TITLE], updatedOn])
     # print(row)
     # for i in range(len(row)):
@@ -168,8 +179,8 @@ def scrape():
     allJobs = responseWithAllJobs.json()
     count = 0
     for job in allJobs:
-        if(count == 10):
-            break
+        # if(count == 10):
+        #     break
         addJobToCsv(job)
         count += 1
     print("############################################")
