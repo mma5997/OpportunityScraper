@@ -6,7 +6,7 @@ import csv
 import json
 
 REQUREST_URL = 'https://workat.tech/api/jobs/'
-IMAGE_PREFIX_URL = "https://d2yjqys1j7uhg1.cloudfront.net"
+IMAGE_PREFIX_URL = "/companylogo/"
 CSV_FILE_REL_PATH = "./Files/ScrapedJobs.csv"
 IMAGES_REL_PATH = "./Images/"
 
@@ -68,9 +68,14 @@ def getRowFromJobFields(jobFields):
         expiry_date_datetime_string = expiry_date_datetime.strftime(
             "%d-%m-%YT%H:%M:%S%z%Z")
 
-    imageLink = IMAGE_PREFIX_URL + jobFields[COMPANY][LOGO]
+    imageLink = jobFields[COMPANY][LOGO]
+    index = imageLink.rfind("/")
+    imageLink = imageLink[index+1:]
+    if len(imageLink) > 0:
+        imageLink = IMAGE_PREFIX_URL + imageLink
 
-    # script for writing the images to filesystem. Done using it so commented it
+    #imageLink = IMAGE_PREFIX_URL + jobFields[COMPANY][LOGO]
+    # script for writing the images to filesystem. Done using it, so now commented it
     # index = imageLink.rfind("/")
     # if len(imageLink) > 0 and index != -1 and (index+1) < len(imageLink):
     #     fileName = imageLink[index+1:]
@@ -87,10 +92,10 @@ def getRowFromJobFields(jobFields):
     if len(jobFields[LOCATIONS]) == 0:
         for locn in LOCATIONS_LIST:
             if locn in upperCaseJobDesc:
-                locations += locn + ","
+                locations += locn + ", "
 
-    if len(locations) > 0 and locations[-1] == ",":
-        locations = locations[:-1]
+    if len(locations) > 2 and locations[-2] == ",":
+        locations = locations[:-2]
 
     # get rid of the location in JobDescription and the trailing unwanted text
     if len(jobDesc) > 0:
@@ -127,15 +132,15 @@ def getRowFromJobFields(jobFields):
 
     if jobFields[EXPERIENCE][MIN] is not None:
         experience += "Min Experience : " + \
-            str(jobFields[EXPERIENCE][MIN]) + ","
+            str(jobFields[EXPERIENCE][MIN]) + ", "
     if jobFields[EXPERIENCE][MAX] is not None:
         experience += "Max Experience : " + \
-            str(jobFields[EXPERIENCE][MAX]) + ","
+            str(jobFields[EXPERIENCE][MAX]) + ", "
     if jobFields[EXPERIENCE][LEVEL] is not None and len(jobFields[EXPERIENCE][LEVEL]) > 0:
         experience += "Level : " + jobFields[EXPERIENCE][LEVEL]
 
-    if len(experience) > 0 and experience[-1] == ",":
-        experience = experience[:-1]
+    if len(experience) > 2 and experience[-2] == ",":
+        experience = experience[:-2]
 
     # updatedOn same as createdOn apparently
     updatedOn = date_posted_datetime_string
@@ -190,3 +195,7 @@ def scrape():
 
 if __name__ == "__main__":
     scrape()
+
+# TODO:
+# imageLink --> /companylogo/adobe.svg --> done
+# next step from csv to Opportunity Collection.
