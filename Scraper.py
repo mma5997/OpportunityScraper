@@ -4,6 +4,7 @@ import dateutil.parser as dparser
 import datetime
 import csv
 import json
+import pytz
 
 REQUREST_URL = 'https://workat.tech/api/jobs/'
 IMAGE_PREFIX_URL = "/companylogo/"
@@ -63,10 +64,15 @@ def getRowFromJobFields(jobFields):
         date_posted_datetime_string = date_posted_datetime.strftime(
             "%d-%m-%YT%H:%M:%S%z%Z")
 
+        date_posted_datetime = datetime.datetime.strptime(
+            date_posted_datetime_string, "%d-%m-%YT%H:%M:%S%z%Z")
+
         expiry_date_datetime = date_posted_datetime + \
             datetime.timedelta(days=EXPIRY_OFFSET)
         expiry_date_datetime_string = expiry_date_datetime.strftime(
             "%d-%m-%YT%H:%M:%S%z%Z")
+        expiry_date_datetime = datetime.datetime.strptime(
+            expiry_date_datetime_string, "%d-%m-%YT%H:%M:%S%z%Z")
 
     imageLink = jobFields[COMPANY][LOGO]
     index = imageLink.rfind("/")
@@ -116,17 +122,14 @@ def getRowFromJobFields(jobFields):
         secondPart = secondPart.replace("workattech", "techmaestro")
         jobLink = firstPart + secondPart
 
-    date_opportunity = datetime.datetime.utcnow(
-    ) + datetime.timedelta(days=OPPORTUNITY_OFFSET)
+    date_opportunity = datetime.datetime.now(pytz.timezone(
+        "UTC")) + datetime.timedelta(days=OPPORTUNITY_OFFSET)
 
     if expiry_date_datetime_string == "":
         expiry_date_datetime = date_opportunity + \
             datetime.timedelta(days=EXPIRY_OFFSET - OPPORTUNITY_OFFSET)
         expiry_date_datetime_string = expiry_date_datetime.strftime(
             "%d-%m-%YT%H:%M:%S%z%Z")
-
-    date_opportunity_string = date_opportunity.strftime(
-        "%d-%m-%YT%H:%M:%S%z%Z")
 
     experience = ""
 
@@ -145,8 +148,8 @@ def getRowFromJobFields(jobFields):
     # updatedOn same as createdOn apparently
     updatedOn = date_posted_datetime_string
 
-    row = list([jobFields[COMPANY][NAME], date_posted_datetime_string, expiry_date_datetime_string, imageLink,
-               jobDesc.strip(), jobLink, locations, date_opportunity_string, experience, jobFields[TITLE], updatedOn])
+    row = list([jobFields[COMPANY][NAME], date_posted_datetime, expiry_date_datetime, imageLink,
+               jobDesc.strip(), jobLink, locations, date_opportunity, experience, jobFields[TITLE], date_posted_datetime])
     # print(row)
     # for i in range(len(row)):
     #     row[i] = row[i].decode("utf-8")
@@ -184,7 +187,7 @@ def scrape():
     allJobs = responseWithAllJobs.json()
     count = 0
     for job in allJobs:
-        # if(count == 10):
+        # if(count == 1):
         #     break
         addJobToCsv(job)
         count += 1
@@ -197,5 +200,4 @@ if __name__ == "__main__":
     scrape()
 
 # TODO:
-# imageLink --> /companylogo/adobe.svg --> done
-# next step from csv to Opportunity Collection.
+# review the datetime objects
