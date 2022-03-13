@@ -11,6 +11,8 @@ IMAGE_PREFIX_URL = "/companylogo/"
 CSV_FILE_REL_PATH = "./Files/ScrapedJobs.csv"
 IMAGES_REL_PATH = "./Images/"
 
+# limit of jobs in CSV
+LIMIT = 1
 
 # Expiry offset of days
 EXPIRY_OFFSET = 30
@@ -187,8 +189,8 @@ def scrape():
     allJobs = responseWithAllJobs.json()
     count = 0
     for job in allJobs:
-        # if(count == 1):
-        #     break
+        if(count == LIMIT):
+            break
         addJobToCsv(job)
         count += 1
     print("############################################")
