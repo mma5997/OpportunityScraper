@@ -6,14 +6,14 @@ from firebase_admin import credentials, firestore
 from datetime import datetime
 from dateutil import parser
 
-cred = credentials.Certificate("./Secret/serviceAccountKey.json")
-app = firebase_admin.initialize_app(cred)
+CRED = credentials.Certificate("./Secret/serviceAccountKey.json")
+APP = firebase_admin.initialize_app(CRED)
 
 store = firestore.client()
 
 # file_path = "C:\\Users\\mautade\\Git_WS\\OpportunityScraperRepo\\Files\\ScrapedJobs.csv"
-file_path = "./Files/ScrapedJobs.csv"
-collection_name = "opportunity"
+FILE_PATH = "./Files/ScrapedJobs.csv"
+COLLECTION_NAME = "opportunity"
 
 DATE_VAR = list(["createdOn", "expiresOn", "opportunityDate", "updatedOn"])
 
@@ -26,7 +26,7 @@ def batch_data(iterable, n=1):
 
 data = []
 headers = []
-with open(file_path) as csv_file:
+with open(FILE_PATH) as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     line_count = 0
     for row in csv_reader:
@@ -49,7 +49,7 @@ with open(file_path) as csv_file:
 for batched_data in batch_data(data, 499):
     batch = store.batch()
     for data_item in batched_data:
-        doc_ref = store.collection(collection_name).document()
+        doc_ref = store.collection(COLLECTION_NAME).document()
         batch.set(doc_ref, data_item)
     batch.commit()
 
